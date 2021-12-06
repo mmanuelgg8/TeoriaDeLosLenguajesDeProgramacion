@@ -1,0 +1,18 @@
+--Bexp
+--b::=true|false|b1^b2|not b|a1=a2|a1<=a2
+--f. semántica
+--B::Bexp -> State -> T (Donde T es el dominio semántico {tt,ff} que no tiene operaciones)
+--B[true] s = tt
+--B[false] s = ff
+--B[not b] s = if B[b] s == tt then ff else tt
+--B[b1 ^ b2] s = if B[b1] s == tt and B[b2] == tt then tt else ff
+--B[a1=a2] s = if A[a1] s == A[a2] s then tt else ff
+-- Es composicional a pesar de formarse a partir de otra función semántica, ya que el sentido semántico de una cadena del lenguaje depende de la composición de sus partes.
+
+-- Las variables que no intervienen no afectan a la semántica ==> forall a in Aexp P(a), forall x in FV(a) sx=s'x / A[a] s = A[a] s' 
+-- forall a in Aexp
+--      forall s,s' in State
+--                          Si
+--                              forall x in FV(a) s x = s' x
+--                          entonces
+--                              A[a] s = A[a] s'
