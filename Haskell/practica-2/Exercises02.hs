@@ -21,6 +21,7 @@ import           Bexp
 import           While
 import           WhileParser
 import Data.List (nub)
+import           WhileExamples
 
 {-
    Note: You need to either copy or import the data type 'Update' and
@@ -62,10 +63,14 @@ import Exercises01
 -- |    showState s ["y", "z", "x"] = ["y -> 6", "z -> 0", "x -> 1"]
 
 showState :: State -> [Var] -> [String]
-showState s = undefined
+showState s = map (\ x -> x ++ " -> " ++ show (s x))
 
 -- | Test your function with HUnit.
 
+testShowState :: Test
+testShowState = test [
+            "x" ~: ["x -> 3"] ~=? showState sInit ["x"],
+            "x y" ~: ["x -> 3", "y -> 0"] ~=? showState sInit ["x","y"]]
 
 -- | Exercise 1.2
 -- | Define a function 'fvStm' that returns the free variables of a WHILE
@@ -76,11 +81,22 @@ showState s = undefined
 -- | Note: the order of appearance is not relevant, but there should not be
 -- | duplicates.
 
+
 fvStm :: Stm -> [Var]
-fvStm st = undefined
+fvStm = nub . fvStmLoc
+  where
+    fvStmLoc (Ass x a) = x : (fvAexp a)
+    fvStmLoc (Skip) = []
+    fvStmLoc (Comp s1 s2) = (fvStm s1) ++ (fvStm s2)
+    fvStmLoc (If b s1 s2) = (fvStm s1) ++ (fvStm s2)
+    fvStmLoc (While b s) = (fvStm s)
 
 -- | Test your function with HUnit. Beware the order of appearance.
 
+testFvStm :: Test
+testFvStm = test [
+            "factorial" ~: ["y","x"] ~=? fvStm factorial,
+            "swap" ~: ["z","x","y"] ~=? fvStm swap]
 
 -- | Exercise 1.3
 -- | Define a function 'showFinalState' that given a WHILE statement and
@@ -222,8 +238,32 @@ nsAexp = undefined
 -- | Exercise 5.1
 -- | Using axioms and inference rules, define a deduction system that
 -- | checks whether a WHILE program satisfies this restriction.
+{-
+    C |- Stm -> Bool
+    C |- skip -> True
+    C |- x := a -> x not in C
 
+            C U {x} |- S -> V
+    -------------------------------------
+      C |- for x := a1 to a2 do S -> V
 
+      C |- S1 -> V1   C |- S2 -> V2
+    --------------------------------
+        C |- S1; S2 -> V1 and V2
+
+      C |- S1 -> V1        C |- S2 -> V2
+    --------------------------------------
+    C |- if b then S1 else S2 -> V1 and V2 
+
+          C |- S -> V
+    -----------------------------
+       C |- while b do S -> V
+
+           C |- S -> V
+    ----------------------------
+      C |- repeat S until b -> V   
+
+-}
 -- | Exercise 5.2
 -- | Define a function 'forLoopVariableCheck :: Stm -> Bool' that implements
 -- | the static semantics check above described.
