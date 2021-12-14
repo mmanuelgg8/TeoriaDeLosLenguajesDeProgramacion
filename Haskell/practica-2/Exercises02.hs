@@ -107,10 +107,13 @@ testFvStm = test [
 -- |  showFinalState factorial factorialInit = ["y->6","x->1"]
 
 showFinalState :: Stm -> State -> [String]
-showFinalState st s = undefined
+showFinalState st s = showState (sNs st s) (fvStm st)
 
 -- | Test your function with HUnit. Beware the order or appearance.
 
+testShowFinalState :: Test
+testShowFinalState = test [
+              "factorial" ~: ["y -> 6","x -> 1"] ~=? showFinalState factorial factorialInit]
 
 -- | Exercise 1.4
 -- | Use the function 'run' below to execute the While programs 'Divide.w'

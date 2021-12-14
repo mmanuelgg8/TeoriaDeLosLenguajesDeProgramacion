@@ -14,11 +14,11 @@ module Exercises01 where
 
 import           Test.HUnit hiding (State)
 import           While
-import GHC.CmmToAsm.PPC.Instr (Instr(XORIS, XOR))
-import GHC.Core.Opt.Monad (bindsOnlyPass)
+--import GHC.CmmToAsm.PPC.Instr (Instr(XORIS, XOR))
+--import GHC.Core.Opt.Monad (bindsOnlyPass)
 import Data.List ( nub )
-import GHC.Plugins (bindsOnlyPass)
-import GHC.BaseDir (getBaseDir)
+--import GHC.Plugins (bindsOnlyPass)
+--import GHC.BaseDir (getBaseDir)
 import Aexp
 import Bexp
 
