@@ -57,7 +57,7 @@ sosStm (Inter (Comp s1 s2) s)
             | isFinal (sosStm (Inter s1 s)) = Inter s2 s'
                 where
                     Final s' = sosStm (Inter s1 s)
-                    
+
 sosStm (Inter (Comp s1 s2) s)                    
             | isInter (sosStm (Inter s1 s)) = Inter (Comp s1 s2) s'
                 where
@@ -74,7 +74,7 @@ sosStm (Inter (While b st) s) = Inter (If b (Comp st (While b st)) Skip) s
 
 -- repeat s until b
 
--- todo
+sosStm (Inter (Repeat st b) s) = Inter (Comp (st) (If b (Repeat st b) (Skip))) s
 
 -- for x a1 to a2 s
 
@@ -82,4 +82,4 @@ sosStm (Inter (While b st) s) = Inter (If b (Comp st (While b st)) Skip) s
 
 -- abort
 
--- todo
+sosStm (Inter abort s) = Stuck abort s
