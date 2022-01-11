@@ -1,0 +1,9 @@
+> showAbortSeq
+Abort
+ s(x)= 3
+ s(y)= 0
+
+Stuck state:
+Abort
+ s(x)= 3
+ s(y)= 0

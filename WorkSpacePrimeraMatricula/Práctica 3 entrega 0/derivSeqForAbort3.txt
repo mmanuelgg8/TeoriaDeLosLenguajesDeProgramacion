@@ -1,0 +1,57 @@
+> showAbortSeq
+Comp (Ass "x" (N 1)) (While (Le (V "x") (N 5)) (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))))
+ s(x)= 3
+ s(y)= 0
+
+While (Le (V "x") (N 5)) (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1))))
+ s(x)= 1
+ s(y)= 0
+
+If (Le (V "x") (N 5)) (Comp (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))) (While (Le (V "x") (N 5)) (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))))) Skip
+ s(x)= 1
+ s(y)= 0
+
+Comp (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))) (While (Le (V "x") (N 5)) (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))))
+ s(x)= 1
+ s(y)= 0
+
+Comp (Ass "x" (Add (V "x") (N 1))) (While (Le (V "x") (N 5)) (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))))
+ s(x)= 1
+ s(y)= 0
+
+While (Le (V "x") (N 5)) (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1))))
+ s(x)= 2
+ s(y)= 0
+
+If (Le (V "x") (N 5)) (Comp (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))) (While (Le (V "x") (N 5)) (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))))) Skip
+ s(x)= 2
+ s(y)= 0
+
+Comp (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))) (While (Le (V "x") (N 5)) (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))))
+ s(x)= 2
+ s(y)= 0
+
+Comp (Ass "x" (Add (V "x") (N 1))) (While (Le (V "x") (N 5)) (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))))
+ s(x)= 2
+ s(y)= 0
+
+While (Le (V "x") (N 5)) (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1))))
+ s(x)= 3
+ s(y)= 0
+
+If (Le (V "x") (N 5)) (Comp (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))) (While (Le (V "x") (N 5)) (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))))) Skip
+ s(x)= 3
+ s(y)= 0
+
+Comp (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))) (While (Le (V "x") (N 5)) (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))))
+ s(x)= 3
+ s(y)= 0
+
+Comp Abort (While (Le (V "x") (N 5)) (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))))
+ s(x)= 3
+ s(y)= 0
+
+Stuck state:
+Comp Abort (While (Le (V "x") (N 5)) (If (Eq (V "x") (N 3)) Abort (Ass "x" (Add (V "x") (N 1)))))
+ s(x)= 3
+ s(y)= 0

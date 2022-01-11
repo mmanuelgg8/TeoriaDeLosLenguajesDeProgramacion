@@ -1,0 +1,1 @@
+Comp (Ass "z" (N 1)) (While (Le (N 1) (V "y")) (Comp (Ass "z" (Mult (V "z") (V "x"))) (Ass "y" (Sub (V "y") (N 1)))))

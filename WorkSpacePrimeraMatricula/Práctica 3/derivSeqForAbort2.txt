@@ -1,0 +1,17 @@
+> showAbortSeq
+Comp (Ass "x" (N 1)) (Comp (Ass "y" (N 2)) (Comp Abort (Ass "z" (N 3))))
+ s(x)= 3
+ s(y)= 0
+
+Comp (Ass "y" (N 2)) (Comp Abort (Ass "z" (N 3)))
+ s(x)= 1
+ s(y)= 0
+
+Comp Abort (Ass "z" (N 3))
+ s(x)= 1
+ s(y)= 2
+
+Stuck state:
+Comp Abort (Ass "z" (N 3))
+ s(x)= 1
+ s(y)= 2

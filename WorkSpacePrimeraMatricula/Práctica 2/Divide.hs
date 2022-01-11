@@ -1,0 +1,1 @@
+Comp (Ass "x" (N 18)) (Comp (Ass "y" (N 1)) (If (Neg (Eq (V "y") (N 0))) (Comp (Ass "q" (N 0)) (Comp (While (Le (V "y") (V "x")) (Comp (Ass "x" (Sub (V "x") (V "y"))) (Ass "q" (Add (V "q") (N 1))))) (Ass "r" (V "x")))) (Ass "error" (N 1))))

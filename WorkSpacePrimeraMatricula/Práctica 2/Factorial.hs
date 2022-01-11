@@ -1,0 +1,1 @@
+Comp (Ass "x" (N 200)) (Comp (Ass "y" (N 1)) (While (Le (N 1) (V "x")) (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1))))))
