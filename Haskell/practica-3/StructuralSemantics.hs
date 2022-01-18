@@ -54,14 +54,23 @@ sosStm (Inter Skip s) = Final s
 -- s1; s2
 
 sosStm (Inter (Comp s1 s2) s)
-            | isFinal (sosStm (Inter s1 s)) = Inter s2 s'
+            | isFinal stm = Inter s2 s'
                 where
-                    Final s' = sosStm (Inter s1 s)
+                    stm = sosStm (Inter s1 s)
+                    Final s' = stm
 
-sosStm (Inter (Comp s1 s2) s)                    
-            | isInter (sosStm (Inter s1 s)) = Inter (Comp s1 s2) s'
+sosStm (Inter (Comp s1 s2) s)
+            | isInter stm = Inter (Comp s1' s2) s'
                 where
-                    Inter s1' s' = sosStm (Inter s1 s)
+                    stm = sosStm (Inter s1 s)
+                    Inter s1' s' = stm
+
+sosStm (Inter (Comp s1 s2) s)
+            | isStuck stm = Stuck (Comp st s2) s'
+            where
+                stm = sosStm (Inter s1 s)
+                Stuck st s' = stm
+
 -- if b then s1 else s2
 
 sosStm (Inter (If b s1 s2) s)
@@ -74,12 +83,17 @@ sosStm (Inter (While b st) s) = Inter (If b (Comp st (While b st)) Skip) s
 
 -- repeat s until b
 
-sosStm (Inter (Repeat st b) s) = Inter (Comp (st) (If b (Repeat st b) (Skip))) s
+sosStm (Inter (Repeat st b) s) = Inter (Comp st (If b (Repeat st b) Skip)) s
 
 -- for x a1 to a2 s
 
--- todo
+sosStm (Inter (For x a1 a2 st) s) = Inter (If b (Comp (Comp xStm st) (For x a1' a2' st)) Skip) s 
+    where
+        b = Le a1 a2
+        xStm = Ass x a1
+        a1' = N (aVal (Add a1 (N 1)) s)
+        a2' = N (aVal a2 s)
 
 -- abort
 
-sosStm (Inter abort s) = Stuck abort s
+sosStm (Inter st s) = Stuck st s

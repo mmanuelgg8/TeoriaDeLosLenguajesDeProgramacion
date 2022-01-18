@@ -19,6 +19,7 @@ import           Bexp
 import           StructuralSemantics
 import           While
 import           WhileParser
+import Data.List (scanl')
 
 -- |----------------------------------------------------------------------
 -- | Exercise 1
@@ -33,7 +34,31 @@ type DerivSeq = [Config]
 -- | initial state 's' returns the corresponding derivation sequence:
 
 derivSeq :: Stm -> State -> DerivSeq
-derivSeq st s = undefined
+derivSeq st ini = derivSeq' (Inter st ini)
+  where
+    -- derivSeq' :: Config -> DerivSeq
+    derivSeq' cf@(Final s) = [cf]
+    derivSeq' cf@(Inter ss s) = cf : derivSeq' (sosStm cf)
+    -- derivSeq' cf@(Stuck ss s)
+
+
+{-
+derivSeq (Ass x a) s = Inter (Ass x a) s : [sosStm (Inter (Ass x a) s)]
+
+derivSeq Skip s = Inter Skip s : [sosStm (Inter Skip s)]
+
+derivSeq (Comp s1 s2) s = Inter (Comp s1 s2) s : derivSeq ss s'
+  where
+    Inter ss s' = sosStm (Inter (Comp s1 s2) s)
+
+derivSeq (If b s1 s2) s = Inter (If b s1 s2) s : derivSeq ss s' 
+  where
+    Inter ss s' = sosStm (Inter (If b s1 s2) s)
+
+derivSeq (While b ss) s = Inter (While b ss) s : derivSeq ss s' 
+  where
+    Inter ss s' = sosStm (Inter (While b ss) s)
+-}
 
 -- | The function 'showDerivSeq' returns a String representation  of
 -- | a derivation sequence 'dseq'. The 'vars' argument is a list of variables
@@ -56,6 +81,8 @@ showDerivSeq vars dseq = unlines (map showConfig dseq)
 -- |
 -- | Write a few more While programs. For example, write a While program to
 -- | compute x^y.
+
+-- TODO
 
 -- | Run the While program stored in filename and show final values of variables
 
@@ -85,7 +112,7 @@ sSos ss s = s'
 -- | are not allowed to rely on the 'while b do S' statement.
 
 {- Formal definition of 'repeat S until b'
-
+  
 -}
 
 -- | Exercise 2.2
