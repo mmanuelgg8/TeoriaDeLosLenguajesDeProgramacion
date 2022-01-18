@@ -50,11 +50,11 @@ type Loc = Integer
 
 -- variable environment
 
-type EnvVar = Var -> Loc
+type EnvVar = Var -> Loc  -- enV [x -> l]
 
 -- store
 
-type Store = Loc -> Z
+type Store = Loc -> Z  -- sto [l -> Z]
 
 -- the register 'next' is actually stored at location 0 of the store:
 -- 'sto [next]' refers to the first available cell in the store 'sto'
@@ -91,12 +91,12 @@ new l = l + 1
 -- | Exercise 1.1 - update envV and sto
 
 -- update a variable environment with a new binding envV [x -> l]
-updateV :: EnvVar -> Var -> Loc -> EnvVar
-updateV envV x l = undefined
+updateV :: EnvVar -> Var -> Loc -> EnvVar 
+updateV envV x l = \ y -> if y == x then l else envV y 
 
 -- update a store with a new binding sto [l -> v]
 updateS :: Store -> Loc -> Z -> Store
-updateS sto l v = undefined
+updateS sto l v = \ d -> if d == l then v else sto d
 
 -- | Exercise 1.2 - natural semantics for variable declarations
 
@@ -108,9 +108,15 @@ data ConfigD = InterD DecVar EnvVar Store  -- <Dv, envV, store>
 nsDecV :: ConfigD -> ConfigD
 
 -- var x := a
-nsDecV (InterD (Dec x a decs) envV store) = undefined
+nsDecV (InterD (Dec x a decs) envV store) = 
+  nsDecV (InterD decs envV' store')
+  where
+    l = store next
+    envV' = updateV envV x l
+    v = aVal a (store . envV) 
+    store' = updateS (updateS store l v) next (new l)
 -- epsilon
-nsDecV (InterD EndDec envV store)         = undefined
+nsDecV (InterD EndDec envV store)         = FinalD envV store
 
 ----------------------------------------------------------------------
 -- Procedure Declarations
@@ -126,15 +132,17 @@ data EnvProc = EnvP Pname Stm EnvVar EnvProc EnvProc
 
 -- update the procedure environment envP
 updP :: DecProc -> EnvVar -> EnvProc -> EnvProc
-updP (Proc p s procs) envV envP = undefined
-updP EndProc envV envP          = undefined
+updP (Proc p s procs) envV envP = updP procs envV (EnvP p s envV envP envP)
+updP EndProc envV envP          = envP
 
 -- | Exercise 2.2 - look up procedure definitions
 
 -- lookup procedure p
 envProc :: EnvProc -> Pname -> (Stm, EnvVar, EnvProc)
-envProc (EnvP q s envV envP envs) p = undefined
-envProc EmptyEnvProc p              = undefined
+envProc (EnvP q s envV envP envs) p 
+  | p == q = (s, envV, envs)
+  | otherwise  = envProc envs p
+envProc EmptyEnvProc p              = error ("procedimiento indefinido " ++ p)
 
 ----------------------------------------------------------------------
 -- Natural Semantics for While
