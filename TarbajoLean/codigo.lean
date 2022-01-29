@@ -1,5 +1,7 @@
-
+-- La mayoría del código ha sido obtenido de los manuales oficiales de Lean
 import init.data.int.basic
+
+-- Lean incluye librerías para trabajar con demostraciones en ámbitos específicos, por ejemplo init.data.int incorpora algunas demostraciones automáticas. Véase:
 
 variables a b c d : ℤ 
 
@@ -22,15 +24,22 @@ inductive nat : Type
 | succ : nat → nat
 
 end hidden
+
 open nat
 
--- Codigo nuestro
+-- Aqui realizamos una implementacion con el tipo definido nat
 def two_pow : hidden.nat → ℕ 
 | hidden.nat.zero        := 1
 | (hidden.nat.succ n) := 2 * two_pow n
 
+-- Demostramos por induccion
+
 example (n : hidden.nat) : two_pow hidden.nat.zero = 1 := rfl -- rfl o Eq.refl es el cumplmiento de la propiedad reflexiva
 example (n : hidden.nat) : two_pow (hidden.nat.succ n) = 2 * two_pow n := rfl 
+
+#eval two_pow (hidden.nat.succ hidden.nat.zero)
+
+-- Y aqui lo hacemos con el ℕ propio de Lean
 
 def two_powN : ℕ → ℕ
 | 0        := 1
@@ -38,12 +47,16 @@ def two_powN : ℕ → ℕ
 
 #eval two_powN 2
 
-example (n : ℕ) : two_powN 0 = 1 := rfl 
+example : two_powN 0 = 1 := rfl 
 example (n : ℕ) : two_powN (n + 1) = 2 * two_powN n := rfl
+
+
+/- Este código lo hemos adquirido del vídeo puesto en la bibliografía como "Ejemplo de demostración" -/
+/- Proposiciones -/
 
 -- Tactic mode
 example (p q r : Prop) : ((p ∨ q) → r) ↔ ((p → r) ∧ (q → r)) :=
-begin -- Empezamos el modo tactical
+begin -- Empezamos el modo tactics
   split, -- Como tenemos que demostrar en ambos sentidos por la doble implicación, usamos split para dividir la demostración en dos
   -- Empezamos a demostrar por la parte izquierda
   { intro h, -- Con 'intro' añadimos una hipótesis asumiendo cierta la premisa de la implicación
@@ -70,6 +83,50 @@ end
 
 -- Term mode
 example (p q r : Prop) : ((p ∨ q) → r) ↔ ((p → r) ∧ (q → r)) :=
-⟨ λ h, ⟨ λ hp, h $ or.inl hp, λ hq, h $ or.inr hq⟩, λ ⟨ hpr, hqr⟩ hpq, hpq.elim hpr hqr⟩ 
+⟨ λ h, ⟨ λ hp, h (or.inl hp), λ hq, h (or.inr hq)⟩, λ ⟨ hpr, hqr⟩ hpq, hpq.elim hpr hqr⟩ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+theorem and_commutative (p q : Prop) : p ∧ q → q ∧ p :=
+begin
+assume hpq : p ∧ q,
+split,
+{
+  cases hpq with hp hq,
+  assumption
+},
+{
+  cases hpq with hp hq,
+  assumption
+}
+
+end
+
+
+
+example (p q : Prop) : p ∧ q → q ∧ p := and.swap
 
 
