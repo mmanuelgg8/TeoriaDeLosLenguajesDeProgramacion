@@ -166,7 +166,12 @@ sSos ss s = s'
 -- | that it deals with stuck configurations.
 
 derivSeqAbort :: Stm -> State -> DerivSeq
-derivSeqAbort = undefined
+derivSeqAbort st ini = derivSeq' (Inter st ini)
+  where
+    -- derivSeq' :: Config -> DerivSeq
+    derivSeq' cf@(Final s) = [cf]
+    derivSeq' cf@(Inter ss s) = cf : derivSeq' (sosStm cf)
+    derivSeq' cf@(Stuck ss s) = [cf]
 
 -- | Use the function 'runAbort' below to execute the While programs 'Aborti.w'
 -- | in the directory 'Examples' to check your implementation of the Structural
@@ -236,8 +241,25 @@ data AexpConfig = Redex Aexp State  -- a redex is a reducible expression
 -- | next configuration.
 
 sosAexp :: AexpConfig -> AexpConfig
+sosAexp (Value n) = Value n
+sosAexp (Redex (N n) _) = Value n
+sosAexp (Redex (V x) s) = Redex (N (s x)) s
 
-sosAexp = undefined
+sosAexp (Redex (Add (N a) (N b)) s) = Redex (N c) s
+  where
+    c = a + b
+
+sosAexp (Redex (Add (N n) a) s) = Redex (Add (N n) red) s
+  where
+    Redex red _ = sosAexp (Redex a s)
+
+sosAexp (Redex (Add a b) s) = Redex (Add red b) s
+  where
+    Redex red _ = sosAexp (Redex a s)
+
+sosAexp (Redex (Sub _ _) s) = undefined
+sosAexp (Redex (Mult _ _) s) = undefined
+
 
 -- |----------------------------------------------------------------------
 -- | Exercise 5.2
@@ -252,8 +274,17 @@ type AexpDerivSeq = [AexpConfig]
 -- | initial state 's' returns the corresponding derivation sequence:
 
 aExpDerivSeq :: Aexp -> State -> AexpDerivSeq
-aExpDerivSeq = undefined
-
+aExpDerivSeq aexp s = aexpderivseq (Redex aexp s)
+  where
+    aexpderivseq (Value n) = [Value n]
+    aexpderivseq config = config : aexpderivseq (sosAexp config)
+{-    
+aExpDerivSeq (N x) s = [sosAexp (Redex (N x) s)]
+aExpDerivSeq (V x) s = Redex (V x) s : [sosAexp (Redex (V x) s)]
+aExpDerivSeq (Add x y) s = Redex (Add x y) s : [sosAexp (Redex (Add x y) s)]
+aExpDerivSeq (Sub x y) s = Redex (Sub x y) s : [sosAexp (Redex (Sub x y) s)]
+aExpDerivSeq (Mult x y) s = Redex (Mult x y) s : [sosAexp (Redex (Mult x y) s)]
+-}
 -- | To test your code, you can use the function 'showAexpDerivSeq' that
 -- | returns a String representation  of a derivation sequence 'dseq':
 
@@ -267,13 +298,28 @@ showAexpDerivSeq vars dseq = unlines (map showConfig dseq)
 -- | Therefore, you can print the derivation sequence of an 'Aexp' with:
 
 exp1 :: Aexp
-exp1 = ( (V "x") `Add` (V "y") ) `Add` (V "z")
+exp1 = ( V "x" `Add` V "y" ) `Add` V "z"
 
 exp2 :: Aexp
-exp2 =  (V "x") `Add` ( (V "y") `Add` (V "z") )
+exp2 =  V "x" `Add` ( V "y" `Add` V "z" )
 
 exp3 :: Aexp
 exp3 = Mult (V "x") (Add (V "y") (Sub (V "z") (N 1)))
+
+exp4 :: Aexp
+exp4 = ( N 1 `Add` N 2 ) `Add` N 3
+
+exp5 :: Aexp
+exp5 = N 3
+
+exp6 :: Aexp
+exp6 = V "x"
+
+exp7 :: Aexp
+exp7 = N 1 `Add` N 2
+
+exp8 :: Aexp
+exp8 = N 1 `Add` (N 2 `Add` N 3)
 
 sExp :: State
 sExp "x" = 1

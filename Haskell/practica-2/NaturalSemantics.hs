@@ -20,6 +20,7 @@ import           While
 import           WhileExamples
 import           Exercises01
 import           Test.HUnit hiding (State)
+import GHC.Types.Avail (avail)
 -- representation of configurations for While
 
 data Config = Inter Stm State  -- <S, s>
@@ -76,6 +77,37 @@ nsStm (Inter (While b ss) s)
   | bVal b s = nsStm (Inter (While b ss) s')
   where
     Final s' = nsStm (Inter ss s)
+
+
+-- repeat S until b
+-- B[b]s = tt
+nsStm (Inter (Repeat stm b) s)
+  | bVal b s' = nsStm (Inter stm s)
+  where
+    Final s' = nsStm (Inter stm s)
+
+-- B[b]s = ff
+nsStm (Inter (Repeat stm b) s)
+  | not (bVal b s') = nsStm (Inter (Comp stm (Repeat stm b)) s)
+  where
+    Final s' = nsStm (Inter stm s)
+
+-- for x a1 a2 stm
+-- B[x=a2]s = ff
+
+nsStm (Inter (For x a1 a2 stm) s)
+  | not (bVal (Eq (V x) a2) s) = nsStm (Inter (Comp stm (For x (N v) (N v2) stm)) s')
+  where
+    v1 = aVal a1 s
+    v2 = aVal a2 s
+    s' = update s (x :=>: v1)
+    v = v1 + 1
+
+
+-- B[x=a2]s = tt
+
+nsStm (Inter (For x a1 a2 stm) s)
+  | bVal (Eq (V x) a2) s = Final s
 
 -- semantic function for natural semantics
 sNs :: Stm -> State -> State

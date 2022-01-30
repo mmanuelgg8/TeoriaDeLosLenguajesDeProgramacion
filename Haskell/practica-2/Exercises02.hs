@@ -30,6 +30,7 @@ import           WhileExamples
 -}
 
 import Exercises01
+import GHC.Driver.Types (srcErrorMessages)
 
 -- |----------------------------------------------------------------------
 -- | Exercise 1
@@ -85,11 +86,12 @@ testShowState = test [
 fvStm :: Stm -> [Var]
 fvStm = nub . fvStmLoc
   where
-    fvStmLoc (Ass x a) = x : (fvAexp a)
-    fvStmLoc (Skip) = []
-    fvStmLoc (Comp s1 s2) = (fvStm s1) ++ (fvStm s2)
-    fvStmLoc (If b s1 s2) = (fvStm s1) ++ (fvStm s2)
-    fvStmLoc (While b s) = (fvStm s)
+    fvStmLoc (Ass x a) = x : fvAexp a
+    fvStmLoc Skip = []
+    fvStmLoc (Comp s1 s2) = fvStm s1 ++ fvStm s2
+    fvStmLoc (If b s1 s2) = fvStm s1 ++ fvStm s2
+    fvStmLoc (While b s) = fvStm s
+    fvStmLoc (Repeat s b) = fvStm s
 
 -- | Test your function with HUnit. Beware the order of appearance.
 
@@ -149,14 +151,14 @@ run filename =
 
 {- Formal definition of 'repeat S until b'
 
+                      <S,s> -> s' <repeat S until b, s'> -> s''
+        [repeat-ff]  -------------------------------------------   B[b]s' == ff
+                           <repeat S until b, s> -> s''
 
-        [repeat-ff]  ------------------------------   ¿condition?
 
-
-
-
-        [repeat-tt]  ------------------------------   ¿condition?
-
+                               <S,s> -> s'
+        [repeat-tt]  ------------------------------   B[b]s' == tt
+                      <repeat S until b, s> -> s'
 
 -}
 
@@ -168,6 +170,24 @@ run filename =
 -- | Exercise 2.3
 -- | Write a couple of WHILE programs that use the 'repeat' statement and
 -- | test your functions with HUnit.
+
+sRepeat :: State
+sRepeat "x" = 5
+sRepeat "fac" = 1
+sRepeat _ = 0
+
+factorialRepeat :: Stm
+factorialRepeat = Repeat (Comp  (Ass "fac" (Mult (V "fac") (V "x")))
+                                (Ass "x" (Sub (V "x") (N 1))))
+                  (Eq (V "x") (N 0))
+
+exampleRepeat :: Stm
+exampleRepeat = Repeat (Ass "x" (Sub (V "x") (N 1))) (Eq (V "x") (N 0))
+
+testRepeat :: Test
+testRepeat = test [
+          "repeat" ~: ["fac -> 120","x -> 0"] ~=? showFinalState factorialRepeat sRepeat,
+          "repeat2" ~: ["x -> 0"] ~=? showFinalState exampleRepeat sRepeat]
 
 
 -- |----------------------------------------------------------------------
@@ -186,7 +206,17 @@ run filename =
 
 {- Formal definition of 'for x:= a1 to a2 do S'
 
+                    <S,s'> -> s'' <for x:= (N v3) to (N v2) do S,s''> -> s'''
+        [for-ff]  ------------------------------------------------------------    B[x = a2]s = ff
+                        <for x:= a1 to a2 do S, s>-> s'''
+              donde 
+                  v1 = aVal a1 s
+                  v2 = aVal a2 s
+                  s' = update s (x :=>: v1)
+                  v3 = if v1 < v2 then (s x)+1 else (s x)-1  
 
+        [for-tt]  ------------------------------------------  B[x = a2]s = tt
+                        <for x:= a1 to a2 do S, s>->s
 -}
 
 -- | Exercise 3.2
@@ -209,15 +239,27 @@ run filename =
 -- representation of configurations for Aexp, (replace TODO by appropriate
 -- data definition)
 
-data ConfigAExp = TODO
+data ConfigAExp = InterC Aexp State | FinalC Z
 
 -- representation of the transition relation <A, s> -> z
 
 nsAexp :: ConfigAExp -> ConfigAExp
-nsAexp = undefined
+nsAexp (InterC a s)= FinalC (aVal a s)
+nsAexp (FinalC z) = FinalC z
 
 -- | Test your function with HUnit. Inspect the final states of at least
 -- | four different evaluations.
+
+showFinalZ :: ConfigAExp -> Z
+showFinalZ (InterC a s) = z
+  where
+    FinalC z = nsAexp (InterC a s)
+showFinalZ (FinalC z) = z
+
+testConfigAexp :: Test
+testConfigAexp = test [
+          "a" ~: 5 ~=? showFinalZ (nsAexp (InterC (V "x") sRepeat)),
+          "5" ~: 13 ~=? showFinalZ (nsAexp (InterC (Add (Mult (Sub (V "x") (V "y")) (V "fac")) (N 8)) sRepeat))]
 
 -- |----------------------------------------------------------------------
 -- | Exercise 5
@@ -270,9 +312,25 @@ nsAexp = undefined
 -- | Exercise 5.2
 -- | Define a function 'forLoopVariableCheck :: Stm -> Bool' that implements
 -- | the static semantics check above described.
+inContext :: Var -> Stm -> Bool
+inContext var (Ass v a) = var == v
+inContext var Skip = False
+inContext var (Comp a b) = inContext var a || inContext var b
+inContext var (If b s ss) = inContext var s || inContext var ss
+inContext var (While b s) = inContext var s
+inContext var (Repeat s b) = inContext var s
+inContext var (For x a1 a2 s) = var == x || inContext var s
 
 forLoopVariableCheck :: Stm -> Bool
-forLoopVariableCheck = undefined
+forLoopVariableCheck Skip = True
+forLoopVariableCheck (Ass x a) = False
+forLoopVariableCheck (For x a1 a2 stm) = inContext x stm
+forLoopVariableCheck (Comp a b) = forLoopVariableCheck a || forLoopVariableCheck b
+forLoopVariableCheck (If b s ss) = forLoopVariableCheck s || forLoopVariableCheck ss 
+forLoopVariableCheck (While b s) = forLoopVariableCheck s
+forLoopVariableCheck (Repeat s b) = forLoopVariableCheck s
+
+
 
 -- |----------------------------------------------------------------------
 -- | Exercise 6
@@ -307,7 +365,35 @@ getFinalState (WhileFFNS (_ :-->: s))      = s
 -- | initial state 's' returns corresponding derivation tree.
 
 nsDeriv :: Stm -> State -> DerivTree
-nsDeriv stm s = undefined
+--nsDeriv stm s = undefined
+nsDeriv (Ass x a) s = AssNS (Inter (Ass x a) s :-->: sf)
+  where Final sf = nsStm (Inter (Ass x a) s)
+
+nsDeriv Skip s = SkipNS (Inter Skip s :-->: s)
+
+nsDeriv (Comp s1 s2) s = CompNS (Inter (Comp s1 s2) s :-->: sf) (nsDeriv s1 s) (nsDeriv s2 ss)
+  where ss = getFinalState (nsDeriv s1 s)
+        sf = getFinalState (nsDeriv s2 ss)
+
+nsDeriv (If b s1 s2) s
+  | bVal b s = IfTTNS (Inter (If b s1 s2) s :-->: sf) (nsDeriv s1 s)
+  where sf = getFinalState (nsDeriv s1 s)
+
+nsDeriv (If b s1 s2) s
+  | bVal (Neg b) s = IfFFNS (Inter (If b s1 s2) s :-->: sf) (nsDeriv s2 s)
+  where sf = getFinalState (nsDeriv s2 s)
+
+nsDeriv (While b ss) s
+  | bVal b s = WhileTTNS (Inter (While b ss) s :-->: sf) (nsDeriv ss s) (nsDeriv (While b ss) s2)
+  where s2 = getFinalState (nsDeriv ss s)
+        sf = getFinalState (nsDeriv (While b ss) s2)
+
+nsDeriv (While b ss) s
+  | bVal (Neg b) s = WhileFFNS (Inter (While b ss) s :-->: s)
+
+nsDeriv (Repeat stm b) s = undefined
+
+nsDeriv (For x a1 a2 stm) s = undefined
 
 -- | Convert concrete syntax to abstract syntax
 
