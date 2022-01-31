@@ -92,6 +92,7 @@ fvStm = nub . fvStmLoc
     fvStmLoc (If b s1 s2) = fvStm s1 ++ fvStm s2
     fvStmLoc (While b s) = fvStm s
     fvStmLoc (Repeat s b) = fvStm s
+    fvStmLoc (For x a1 a2 s) = fvStm s
 
 -- | Test your function with HUnit. Beware the order of appearance.
 
@@ -323,7 +324,7 @@ inContext var (For x a1 a2 s) = var == x || inContext var s
 
 forLoopVariableCheck :: Stm -> Bool
 forLoopVariableCheck Skip = True
-forLoopVariableCheck (Ass x a) = False
+forLoopVariableCheck (Ass x a) = True
 forLoopVariableCheck (For x a1 a2 stm) = inContext x stm
 forLoopVariableCheck (Comp a b) = forLoopVariableCheck a || forLoopVariableCheck b
 forLoopVariableCheck (If b s ss) = forLoopVariableCheck s || forLoopVariableCheck ss 
